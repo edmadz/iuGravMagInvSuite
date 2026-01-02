@@ -5,17 +5,7 @@
 % This main GUI function connects with all other GUI functions and provide
 % some tools for manage the processing data.
 %--------------------------------------------------------------------------
-%           AUTHOR
-%Fabrício Rodrigues Castro
-%
-%           COLABORATORS
-%Saulo Pomponet Oliveira
-%Jeferson de Souza
-%Francisco José Ferreira Fonseca
-%
-%Federal University of Paraná [UFPR]
-%Laboratory for Research in Applied Geophysics [LPGA]
-%Brazil
+%% Author: Muhammet Ali Aygun
 
 function GravMagSuite
 
