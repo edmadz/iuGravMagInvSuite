@@ -1,0 +1,80 @@
+{
+    Title="LCT Formatted File For Grids (modified)",
+    Description=
+	"LCT formatted grid files (c.f. appendix B GRDEDT V2.3)\n"
+	"Differs from lctfmt in presentation of numbers on export\n"
+	"to match exactly LCT-produced grids. Extra effort probably\n"
+	"not worthwhile. Supports rotation of 0 only",
+    FileExtension="grd",
+    GridImport=
+    {
+	BodyNull=0.1E21,
+	StorageSense=+1,
+	Rotation=0.0,
+	HEADER_L3={PARSE,FORMAT="FIELD",FLDSEP="\n\r",START=3,END=3,
+		   COUNT=1,NOEMPTY=1},
+	OriginX={$HEADER_L3,PARSE,FORMAT="CHAR",
+		   START=1,END=14,COUNT=1,INTERP="NUMBER"},
+	OriginY={$HEADER_L3,PARSE,FORMAT="CHAR",
+		   START=15,END=28,COUNT=1,INTERP="NUMBER"},
+	MaxX={$HEADER_L3,PARSE,FORMAT="CHAR",
+		   START=29,END=42,COUNT=1,INTERP="NUMBER"},
+	MaxY={$HEADER_L3,PARSE,FORMAT="CHAR",
+		   START=43,END=56,COUNT=1,INTERP="NUMBER"},
+	CellsX={$HEADER_L3,PARSE,FORMAT="CHAR",STRIPWS=1,
+		   START=57,END=61,COUNT=1,INTERP="NUMBER"},
+	CellsY={$HEADER_L3,PARSE,FORMAT="CHAR",STRIPWS=1,
+		   START=62,END=66,COUNT=1,INTERP="NUMBER"},
+	{ PARSE,FORMAT="LINE",BASE=$HEADER_L3,START=2
+	},
+	PARSE,FORMAT="CHAR",START=11,COUNT=14,
+	STEP=14,INTERP="NUMBER"
+    },
+    GridExport=
+    {
+	BodyNull=0.1E22,
+	StorageSense=+1,
+	Header={
+		"LCT-GRID*ASCII   *ASCII FORMATTED GRID FILE"
+		"                                    \n"
+	        "GETdbase2.0 exported grid",
+		BUTT, {
+		" ",
+		BUTT,{
+		"                              \n",
+		BUTT, {
+		{ "%14.7E",SPRINTF,$ORIGINX },
+		BUTT, {
+		{ "%14.7E",SPRINTF,$ORIGINY },
+		BUTT, {
+		{ "%14.7E",SPRINTF,$MAXX },
+		BUTT, {
+		{ "%14.7E",SPRINTF,$MAXY },
+		BUTT, {
+		{ "%5.0f",SPRINTF,$CELLSX },
+		BUTT,
+		{ "%5.0f\n",SPRINTF,$CELLSY }}}}}}}}
+	},
+	NewlineOnVector=1,
+	ZPerLine=5,
+	VectorOnNull=0,
+	IsXYZ=0,
+	LineStart="          ",
+	LineEnd="\n",
+	HasAllLoc=1,
+	FormatZ={ EFmt={"%13.6E",SPRINTF,$ZVALUE},
+		   {$EFmt,PARSE,FORMAT="CHAR",START=1,COUNT=1,STEP=0},
+		  BUTT, {
+		  "0.",
+		  BUTT, {
+		  {$EFmt,PARSE,FORMAT="CHAR",START=2,COUNT=1,STEP=0},
+		  BUTT,
+		  {$EFmt,PARSE,FORMAT="CHAR",START=4,COUNT=0,STEP=0}}}},
+	EMult=10.0,
+	{$Rotation,EQUALS,0.0},
+	IF,
+	"",
+	"Grid rotation must be zero for LCT formatted output"
+    },
+    " ",PARSE
+}

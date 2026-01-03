@@ -1,0 +1,96 @@
+{
+    Title = "LCT Binary grid file",
+    Description="LCT Binary grid file",
+    FileExtension = "grd",
+    GridImport=
+    {
+	HasAllLoc = 1,
+	StorageSense=1,
+
+        HR1 = {PARSE, FORMAT="CHAR",START=1, COUNT=92},
+        Len = {$HR1, PARSE, FORMAT="CHAR", START= 9, COUNT= 4, INTERP="BINARY SIGNED"},
+
+        HR2 = {PARSE, FORMAT="CHAR", START={$Len,PLUS,1}, COUNT=220, STEP=$Len},
+        OriginX  = {$HR2, PARSE, FORMAT="CHAR", START= 93, COUNT= 4, INTERP="IEEE FLOAT"},
+        OriginY  = {$HR2, PARSE, FORMAT="CHAR", START= 97, COUNT= 4, INTERP="IEEE FLOAT"},
+        IncrX    = {$HR2, PARSE, FORMAT="CHAR", START=101, COUNT= 4, INTERP="IEEE FLOAT"},
+        IncrY    = {$HR2, PARSE, FORMAT="CHAR", START=105, COUNT= 4, INTERP="IEEE FLOAT"},
+        CellsX   = {$HR2, PARSE, FORMAT="CHAR", START=109, COUNT= 4, INTERP="BINARY SIGNED"},
+        CellsY   = {$HR2, PARSE, FORMAT="CHAR", START=113, COUNT= 4, INTERP="BINARY SIGNED"},
+        nP       = {$HR2, PARSE, FORMAT="CHAR", START=145, COUNT= 4, INTERP="BINARY SIGNED"},
+        BodyNull = {$HR2, PARSE, FORMAT="CHAR", START={{$nP,MULT,8},PLUS,153},
+                                                           COUNT= 4, INTERP="IEEE FLOAT"},
+
+        {PARSE, FORMAT="CHAR", START={{$Len,MULT,2},PLUS,17},
+            COUNT={$CellsX, MULT, 4}, STEP=$Len},
+         PARSE, FORMAT="CHAR", COUNT=4, STEP=4, INTERP="IEEE FLOAT"
+    },
+
+    GridExport=
+    {
+	HasAllLoc = 1,
+	StorageSense=3,
+
+	Version = 2,
+	RecLen  = {{$CellsX, PLUS, 6}, MULT, 4},
+	DbId    = "LCT-GRID*BASIC  *DIRECT ACCESS GRID FILE SYSTEM                                 ",
+	ZFlag   = 0,
+
+	GrId     = "                                                                                ",
+	GType    = "        ",
+	ZUnits   = "        ",
+	ProjCode = "        ",
+	XYUnits  = "    ",
+	Ellipsoid= "        ",
+	nPrms    = 0,
+	GAngle   = 0.0,
+	ZNull    = 1E+20,
+	ZMin     = 0,
+	ZMax     = 0,
+	
+	NullZ = {$ZNull, BINARY, INTERP="IEEE FLOAT", COUNT=4},
+
+	FormatZ = {$ZValue, BINARY, INTERP="IEEE FLOAT", COUNT=4},
+
+	Header = {{{{{{{{{{{{{{{{{{{{{{{{
+	    {      1.0, BINARY, INTERP="BINARY SIGNED", COUNT= 4 }, BUTT,
+	    { $Version, BINARY, INTERP="BINARY SIGNED", COUNT= 4}}, BUTT,
+            {  $RecLen, BINARY, INTERP="BINARY SIGNED", COUNT= 4}}, BUTT,
+                 $DbId                                           }, BUTT,
+            {   $ZFlag, BINARY, INTERP="BINARY SIGNED", COUNT= 4}}, BUTT,
+            {{"\0", REPEAT, {$RecLen, MINUS, 96}}, CONCAT }      }, BUTT,
+
+            {      2.0, BINARY, INTERP="BINARY SIGNED", COUNT= 4}}, BUTT,
+                 $GrId                                           }, BUTT,
+                 $GType                                          }, BUTT,
+            { $OriginX, BINARY, INTERP="IEEE FLOAT",    COUNT= 4}}, BUTT,
+            { $OriginY, BINARY, INTERP="IEEE FLOAT",    COUNT= 4}}, BUTT,
+            {   $IncrX, BINARY, INTERP="IEEE FLOAT",    COUNT= 4}}, BUTT,
+            {   $IncrY, BINARY, INTERP="IEEE FLOAT",    COUNT= 4}}, BUTT,
+            {  $CellsX, BINARY, INTERP="BINARY SIGNED", COUNT= 4}}, BUTT,
+            {  $CellsY, BINARY, INTERP="BINARY SIGNED", COUNT= 4}}, BUTT,
+               $ZUnits                                           }, BUTT,
+             $ProjCode                                           }, BUTT,
+              $XYUnits                                           }, BUTT,
+            $Ellipsoid                                           }, BUTT,
+            {   $nPrms, BINARY, INTERP="BINARY SIGNED", COUNT= 4}}, BUTT,
+            {  $GAngle, BINARY, INTERP="IEEE FLOAT",    COUNT= 4}}, BUTT,
+            {   $ZNull, BINARY, INTERP="IEEE FLOAT",    COUNT= 4}}, BUTT,
+            {    $ZMin, BINARY, INTERP="IEEE FLOAT",    COUNT= 4}}, BUTT,
+            {    $ZMax, BINARY, INTERP="IEEE FLOAT",    COUNT= 4}}, BUTT,
+            {{"\0", REPEAT, {$RecLen, MINUS, 164}}, CONCAT }     },
+
+	VectorHeader = {{{
+	    {$VectorNum, BINARY, INTERP="BINARY SIGNED", COUNT= 4 }, BUTT,
+	    {   $CellsX, BINARY, INTERP="BINARY SIGNED", COUNT= 4}}, BUTT,
+            {     $ZMin, BINARY, INTERP="IEEE FLOAT",    COUNT= 4}}, BUTT,
+            {     $ZMax, BINARY, INTERP="IEEE FLOAT",    COUNT= 4}},
+
+	VectorTrailer = {
+            {       0.0, BINARY, INTERP="IEEE FLOAT",    COUNT= 4 }, BUTT,
+            {       0.0, BINARY, INTERP="IEEE FLOAT",    COUNT= 4}},
+	
+	"", PARSE
+    },
+    "", PARSE
+}

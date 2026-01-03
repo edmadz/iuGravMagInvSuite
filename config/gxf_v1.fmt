@@ -1,0 +1,153 @@
+{
+    Title="Grid Exchange Format (GXF), version 1 (no compression)",
+    Description=
+	"Version 1 gxf format (i.e. no transformation, no base-90)",
+    FileExtension="gxf",	
+    GridImport=
+    {
+	C="#GRID label- used to mark end of header",
+	GRID_L={PARSE,FORMAT="LINE",CONDITION={ 
+		{PARSE,FORMAT="FIELD",FLDSEP=" \t",END=1},EQUALS,    "#GRID"}},
+	C="Extract actual header and append a set of defaults",
+	REAL_HEAD={ 
+	     {PARSE,FORMAT="LINE",LIMIT=$GRID_L},
+	     CONCAT,FLDSEP="\n"},
+	HD={
+	     $REAL_HEAD,
+	     BUTT,
+	     "Default lines appended to header\n"
+	     "#PTSEPARATION\n"
+	     "  1.0\n"
+	     "#GTYPE\n"
+	     "  0\n"
+	     "#ROTATION\n"
+	     "  0.\n"
+	     "#RWSEPARATION\n"
+	     "  1.0\n"
+	     "#SENSE\n"
+	     "  1\n"
+	     "#TRANSFORM\n"
+	     "  1.0 0.0\n"
+	     "#XORIGIN\n"
+	     "0.0\n"
+	     "#YORIGIN\n"
+	     "0.0\n"
+	     },
+	NElem={ 
+	    L={$HD, PARSE,FORMAT="LINE",CONDITION={ 
+	    {PARSE,FORMAT="FIELD",FLDSEP=" \t",END=1},EQUALS,    "#POINTS"}},
+	    $HD, PARSE,FORMAT="LINE",BASE=$L,START=2,END=2,
+		INTERP="NUMBER",STRIPWS=1   },
+	NVec={ 
+	    L={$HD,PARSE,FORMAT="LINE",CONDITION={ 
+	    {PARSE,FORMAT="FIELD",FLDSEP=" \t",END=1},EQUALS,    "#ROWS"}},
+	    $HD, PARSE,FORMAT="LINE",BASE=$L,START=2,END=2,
+		INTERP="NUMBER",STRIPWS=1   },
+	SepElem={ 
+	    L={$HD,PARSE,FORMAT="LINE",CONDITION={ 
+	    {PARSE,FORMAT="FIELD",FLDSEP=" \t",END=1},EQUALS,    "#PTSEPARATION"}},
+	    $HD, PARSE,FORMAT="LINE",BASE=$L,START=2,END=2,
+		INTERP="NUMBER",STRIPWS=1   },
+	SepVec={ 
+	    L={$HD,PARSE,FORMAT="LINE",CONDITION={ 
+	    {PARSE,FORMAT="FIELD",FLDSEP=" \t",END=1},EQUALS,    "#RWSEPARATION"}},
+	    $HD, PARSE,FORMAT="LINE",BASE=$L,START=2,END=2,
+		INTERP="NUMBER",STRIPWS=1   },
+	OriginX={ 
+	    L={$HD,PARSE,FORMAT="LINE",CONDITION={ 
+	    {PARSE,FORMAT="FIELD",FLDSEP=" \t",END=1},EQUALS,    "#XORIGIN"}},
+	    $HD, PARSE,FORMAT="LINE",BASE=$L,START=2,END=2,
+		INTERP="NUMBER",STRIPWS=1   },
+	OriginY={ 
+	    L={$HD,PARSE,FORMAT="LINE",CONDITION={ 
+	    {PARSE,FORMAT="FIELD",FLDSEP=" \t",END=1},EQUALS,    "#YORIGIN"}},
+	    $HD, PARSE,FORMAT="LINE",BASE=$L,START=2,END=2,
+		INTERP="NUMBER",STRIPWS=1   },
+	BodyNull={ 
+	    L={$HD,PARSE,FORMAT="LINE",CONDITION={ 
+	    {PARSE,FORMAT="FIELD",FLDSEP=" \t",END=1},EQUALS,    "#DUMMY"}},
+	    $HD, PARSE,FORMAT="LINE",BASE=$L,START=2,END=2,
+		INTERP="NUMBER",STRIPWS=1   },
+	Rotation={ 
+	    L={$HD,PARSE,FORMAT="LINE",CONDITION={ 
+	    {PARSE,FORMAT="FIELD",FLDSEP=" \t",END=1},EQUALS,    "#ROTATION"}},
+	    $HD, PARSE,FORMAT="LINE",BASE=$L,START=2,END=2,
+		INTERP="NUMBER",STRIPWS=1   },
+	GType={ 
+	    L={$HD,PARSE,FORMAT="LINE",CONDITION={ 
+	    {PARSE,FORMAT="FIELD",FLDSEP=" \t",END=1},EQUALS,    "#GTYPE"}},
+	    $HD, PARSE,FORMAT="LINE",BASE=$L,START=2,END=2,
+		INTERP="NUMBER",STRIPWS=1   },
+	C="That GTYPE is 0 is made a condition of extracting Z values, and if"
+	  "GTYPE <> 0 get error 'Cannot retrieve first Z value from grid'",
+	TRANSFORM={ 
+	    L={$HD,PARSE,FORMAT="LINE",CONDITION={ 
+	    {PARSE,FORMAT="FIELD",FLDSEP=" \t",END=1},EQUALS,    "#TRANSFORM"}},
+	    $HD, PARSE,FORMAT="LINE",BASE=$L,START=2,END=2, },
+	C="That the scale is 1.0 is also a condition because the"
+	  "interpretation of scale in gxf is the inverse of that in gengrd"
+	  "Would like to be able to say EMULT={1.0, DIVIDE, SCALE}",
+	TRANSFORM_SCALE={$TRANSFORM,PARSE,FORMAT="FIELD",END=1,INTERP="NUMBER",
+		FLDSEP=" \t",NOEMPTY=1},
+	EBASE={$TRANSFORM,PARSE,FORMAT="FIELD",START=2,INTERP="NUMBER",
+		FLDSEP=" \t",NOEMPTY=1},
+	GXFSense={ 
+	    L={$HD,PARSE,FORMAT="LINE",CONDITION={ 
+	    {PARSE,FORMAT="FIELD",FLDSEP=" \t",END=1},EQUALS,    "#SENSE"}},
+	    $HD, PARSE,FORMAT="LINE",BASE=$L,START=2,END=2,
+		INTERP="NUMBER",STRIPWS=1   },
+	C="Need to swap sense values of 2 and 4, sigh",
+	StorageSense={ 
+	    {$GXFSense,EQUALS,  2}, IF,  4, {
+	    {$GXFSense,EQUALS, -2}, IF, -4, {
+	    {$GXFSense,EQUALS,  4}, IF,  2, {
+	    {$GXFSense,EQUALS, -4}, IF, -2, 
+	    $GXFSense }}}},
+
+	{ PARSE,FORMAT="LINE",START=1,BASE=$GRID_L
+	},
+	PARSE,FORMAT="FIELD",START=1,FLDSEP=" \t",STRIPWS=1,INTERP="NUMBER",
+	CONDITION={ {$GTYPE,EQUALS,0},AND,{$TRANSFORM_SCALE,EQUALS,1.0}}
+    },
+    GridExport=
+    {
+	BodyNull=-1e+32,
+	NullZ="  -1.000000E+32",
+	C="Note that storage senses 2 and 4 differ between GXF and gengrd"
+	  "but +1 is the same in both.",
+	StorageSense=1,
+	Header={
+	    { "#POINTS\n % .0f\n", SPRINTF, $NElem },
+	    BUTT, {
+	    { "#ROWS\n % .0f\n", SPRINTF, $NVec },
+	    BUTT, {
+	    { "#PTSEPARATION\n %# .14g\n", SPRINTF, $SepElem },
+	    BUTT, {
+	    { "#RWSEPARATION\n %# .14g\n", SPRINTF, $SepVec },
+	    BUTT, {
+	    { "#XORIGIN\n  %# .14g\n", SPRINTF, $OriginX },
+	    BUTT, {
+	    { "#YORIGIN\n  %# .14g\n", SPRINTF, $OriginY },
+	    BUTT, {
+	    { "#ROTATION\n  %# .14g\n", SPRINTF, $Rotation },
+	    BUTT, {
+	    {"#SENSE\n  1\n",SPRINTF,0},
+	    BUTT, {
+	    {"#TRANSFORM\n    1.0000000000000  0.\n#DUMMY\n",SPRINTF,0}, 
+	    BUTT, {
+	    $NullZ,
+	    BUTT, 
+	    {"\n#GRID\n",SPRINTF,0}
+	    }}}}}}}}}},
+
+
+	NewlineOnVector=1,
+	ZPerLine=5,
+	IsXYZ=0,
+	LineEnd={"\n",SPRINTF,0},
+	HasAllLoc=1,
+	FormatZ={"%15.6E",SPRINTF,$ZVALUE},
+        "",PARSE
+    },
+    "",PARSE
+}

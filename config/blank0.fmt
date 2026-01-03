@@ -1,0 +1,25 @@
+{
+    Title="Generic formatted ascii grid format",
+    LocZFieldStart={?ZFieldStart,IFVALID,?ZFieldStart,1},
+    LocZFieldWidth={?ZFieldWidth,IFVALID,?ZFieldWidth,1},
+    GridImport=
+    {
+	{PARSE,FORMAT="LINE"},
+	PARSE,FORMAT="CHAR",START=$LocZFieldStart,COUNT=$LocZFieldWidth,
+	STEP=$LocZFieldWidth,INTERP="NUMBER"
+    },
+    GridExport=
+    {
+	LineEnd="\n",
+	FormatZ={
+	    {"%%%.0fg",SPRINTF,$LocZFieldWidth},
+	    SPRINTF,$ZVALUE
+	},
+	LineStart=
+	{"                                             ",
+	    PARSE,FORMAT="CHAR",START=1,COUNT=$LocZFieldStart,END=0
+	},
+	"",VALUE
+    },
+    "",PARSE
+}

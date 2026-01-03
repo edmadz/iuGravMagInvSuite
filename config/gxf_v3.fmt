@@ -1,0 +1,222 @@
+{
+    Title="Grid Exchange Format (GXF), version 3",
+    Description=
+	"Grid Exchange Format (GXF), version 3\n"
+	"Supports base 90 compression and repeat value encoding\n"
+	"Projection and datum under development",
+    FileExtension="gxf",
+    GridImport=
+    {
+	C="#GRID label- used to mark end of header",
+	GRID_L={PARSE,FORMAT="LINE",CONDITION={ 
+		LINEF1={PARSE,FORMAT="FIELD",FLDSEP=" \t",END=1},
+		$LINEF1,EQUALS,"#GRID"}},
+	C="Extract actual header and append a set of defaults",
+	REAL_HEAD={ 
+	     {PARSE,FORMAT="LINE",LIMIT=$GRID_L},
+	     CONCAT,FLDSEP="\n"},
+	HD={
+	     $REAL_HEAD,
+	     BUTT,
+	     "Default lines appended to header\n"
+	     "#PTSEPARATION\n"
+	     "  1.0\n"
+	     "#GTYPE\n"
+	     "  0\n"
+	     "#ROTATION\n"
+	     "  0.\n"
+	     "#RWSEPARATION\n"
+	     "  1.0\n"
+	     "#SENSE\n"
+	     "  1\n"
+	     "#TRANSFORM\n"
+	     "  1.0 0.0\n"
+	     "#XORIGIN\n"
+	     "0.0\n"
+	     "#YORIGIN\n"
+	     "0.0\n"
+	     "#DUMMY\n"
+	     "-1.0e32\n"
+	     },
+	NElem={ 
+	    L={$HD, PARSE,FORMAT="LINE",CONDITION={ 
+	    {PARSE,FORMAT="FIELD",FLDSEP=" \t",END=1},EQUALS,    "#POINTS"}},
+	    $HD, PARSE,FORMAT="LINE",BASE=$L,START=2,END=2,
+		INTERP="NUMBER",STRIPWS=1   },
+	NVec={ 
+	    L={$HD,PARSE,FORMAT="LINE",CONDITION={ 
+	    {PARSE,FORMAT="FIELD",FLDSEP=" \t",END=1},EQUALS,    "#ROWS"}},
+	    $HD, PARSE,FORMAT="LINE",BASE=$L,START=2,END=2,
+		INTERP="NUMBER",STRIPWS=1   },
+	SepElem={ 
+	    L={$HD,PARSE,FORMAT="LINE",CONDITION={ 
+	    {PARSE,FORMAT="FIELD",FLDSEP=" \t",END=1},EQUALS,    "#PTSEPARATION"}},
+	    $HD, PARSE,FORMAT="LINE",BASE=$L,START=2,END=2,
+		INTERP="NUMBER",STRIPWS=1   },
+	SepVec={ 
+	    L={$HD,PARSE,FORMAT="LINE",CONDITION={ 
+	    {PARSE,FORMAT="FIELD",FLDSEP=" \t",END=1},EQUALS,    "#RWSEPARATION"}},
+	    $HD, PARSE,FORMAT="LINE",BASE=$L,START=2,END=2,
+		INTERP="NUMBER",STRIPWS=1   },
+	OriginX={ 
+	    L={$HD,PARSE,FORMAT="LINE",CONDITION={ 
+	    {PARSE,FORMAT="FIELD",FLDSEP=" \t",END=1},EQUALS,    "#XORIGIN"}},
+	    $HD, PARSE,FORMAT="LINE",BASE=$L,START=2,END=2,
+		INTERP="NUMBER",STRIPWS=1   },
+	OriginY={ 
+	    L={$HD,PARSE,FORMAT="LINE",CONDITION={ 
+	    {PARSE,FORMAT="FIELD",FLDSEP=" \t",END=1},EQUALS,    "#YORIGIN"}},
+	    $HD, PARSE,FORMAT="LINE",BASE=$L,START=2,END=2,
+		INTERP="NUMBER",STRIPWS=1   },
+	HdrBodyNull={ 
+	    L={$HD,PARSE,FORMAT="LINE",CONDITION={ 
+	    {PARSE,FORMAT="FIELD",FLDSEP=" \t",END=1},EQUALS,    "#DUMMY"}},
+	    $HD, PARSE,FORMAT="LINE",BASE=$L,START=2,END=2,
+		INTERP="NUMBER",STRIPWS=1   },
+	Rotation={ 
+	    L={$HD,PARSE,FORMAT="LINE",CONDITION={ 
+	    {PARSE,FORMAT="FIELD",FLDSEP=" \t",END=1},EQUALS,    "#ROTATION"}},
+	    $HD, PARSE,FORMAT="LINE",BASE=$L,START=2,END=2,
+		INTERP="NUMBER",STRIPWS=1   },
+	GType={ 
+	    L={$HD,PARSE,FORMAT="LINE",CONDITION={ 
+	    {PARSE,FORMAT="FIELD",FLDSEP=" \t",END=1},EQUALS,    "#GTYPE"}},
+	    $HD, PARSE,FORMAT="LINE",BASE=$L,START=2,END=2,
+		INTERP="NUMBER",STRIPWS=1   },
+	TRANSFORM={ 
+	    L={$HD,PARSE,FORMAT="LINE",CONDITION={ 
+	    {PARSE,FORMAT="FIELD",FLDSEP=" \t",END=1},EQUALS,    "#TRANSFORM"}},
+	    $HD, PARSE,FORMAT="LINE",BASE=$L,START=2,END=2, },
+	C="Note need to invert GXF scale to get EMult",
+	TRANSFORM_SCALE={$TRANSFORM,PARSE,FORMAT="FIELD",END=1,INTERP="NUMBER",
+		FLDSEP=" \t,",NOEMPTY=1},
+	EBASE={$TRANSFORM,PARSE,FORMAT="FIELD",START=2,INTERP="NUMBER",
+		FLDSEP=" \t,",NOEMPTY=1},
+	EMULT={1.0, DIV, $TRANSFORM_SCALE },
+	GXFSense={ 
+	    L={$HD,PARSE,FORMAT="LINE",CONDITION={ 
+	    {PARSE,FORMAT="FIELD",FLDSEP=" \t",END=1},EQUALS,    "#SENSE"}},
+	    $HD, PARSE,FORMAT="LINE",BASE=$L,START=2,END=2,
+		INTERP="NUMBER",STRIPWS=1   },
+	C="Need to swap sense values of 2 and 4, sigh",
+	StorageSense={ 
+	    {$GXFSense,EQUALS,  2}, IF,  4, {
+	    {$GXFSense,EQUALS, -2}, IF, -4, {
+	    {$GXFSense,EQUALS,  4}, IF,  2, {
+	    {$GXFSense,EQUALS, -4}, IF, -2, 
+	    $GXFSense }}}},
+
+	BodyNull={ {$GTYPE,EQUALS,0}, IF, $HdrBodyNull, -1 },
+
+	GRID_LINES={ PARSE,FORMAT="LINE",START=2,BASE=$GRID_L,CONDITION={{PARSE,FORMAT="CHAR",COUNT=1,STEP=0},NE,"$"}},
+	{$GTYPE,EQUALS,0},
+	IF,
+	{$GRID_LINES, PARSE,FORMAT="FIELD",START=1,FLDSEP=" \t",STRIPWS=1,INTERP="NUMBER"
+	},
+	{
+		REPTSTR={{"\"",REPEAT,$GTYPE},CONCAT},
+		NXTV={$GRID_LINES,PARSE,COUNT=$GTYPE,FORMAT="CHAR",STEP=$GTYPE},
+		NXTRV= { 
+		{$NXTV,EQUALS,$REPTSTR,MORE=1}, 
+		IF, 
+		{
+			{
+				OFFGTYPE={$GTYPE,PLUS,1},
+				RVX={{$NXTV,EVAL},BUTT,{$NXTV,EVAL}},
+				{$RVX,PARSE,FORMAT="CHAR",COUNT=$GTYPE,START=$OFFGTYPE,END=$OFFGTYPE,STEP=$GTYPE},
+				REPEAT,
+				{$RVX,PARSE,FORMAT="CHAR",COUNT=$GTYPE,START=1,END=1,INTERP="GXF90"},
+			},CONCAT
+		},
+		$NXTV, MORE=1},
+		$NXTRV,PARSE,FORMAT="CHAR",COUNT=$GTYPE,STEP=$GTYPE,INTERP="GXF90"
+	},
+	MORE=1
+    },
+    GridExport=
+    {
+	VariableList={"GTypeVar",PARSE,FORMAT="FIELD"},
+	GTypeVar={
+	    Vals=
+		"0,'normal' decimal floating point\n"
+		"1,1 digit base 90 (1-2 decimal digits)\n"
+		"2,2 digit base 90 (3-4 decimal digits)\n"
+		"3,3 digit base 90 (5-6 decimal digits)\n"
+		"4,4 digit base 90 (7-8 decimal digits)\n"
+		"5,5 digit base 90 (9-10 decimal digits)",
+	    Name="Gtype",
+	    Description=
+		"0 for ordinary numbers, 1,2,3 etc for base 90 compression",
+	    Type="Integer",
+	    MinValue=0,
+	    Required=0,
+	    EnumVals={{$Vals,PARSE,FORMAT="LINE"},PARSE,FORMAT="FIELD",start=1,end=1,INTERP="STRING"},
+	    EnumName={{$Vals,PARSE,FORMAT="LINE"},PARSE,FORMAT="FIELD",start=2,end=2,INTERP="STRING"},
+	    "3",VALUE},
+		
+	L_GTYPE={ ?GTYPE, IFVALID, ?GTYPE, 3},
+	L_G_ZERO={ $L_GTYPE, EQUALS, 0 },
+	BodyNull={ $L_G_ZERO, IF, -1e+32, -1 },
+	C="Need to specify the data range for compressed format",
+	L_RANGES_MAX="90,8100,729000,65610000,5904900000,531441000000,47829690000000,"
+		      "4304672100000000,387420489000000000",
+	ERangeMin={ $L_G_ZERO, IF, _INVALID, 0},
+	ERangeMax={ $L_G_ZERO, IF, 
+		    _INVALID, 
+		    {{ $L_RANGES_MAX, PARSE, FORMAT="FIELD", START=$L_GTYPE, INTERP="NUMBER"}, MINUS, 1} },
+	C="Need to calculate EXBase/Mult from EBase/Mult, as different beasts",
+	C="EXBase={?EBase,IFVALID,?EBase,0.0},",
+	EXBase=$EBase,
+	EXMult={1.0, DIV, {?EMult,IFVALID,?EMult,1.0}},
+	C="Repeat count variables are derived from ERangeMax, both enabled activates repeat counting",
+	RepeatCountMin=3,
+	RepeatCountMax=$ERangeMax,
+	RepeatNullCountMin=3,
+	RepeatNullCountMax=$ERangeMax,
+	C="Note that storage senses 2 and 4 differ between GXF and gengrd"
+	  "but +1 is the same in both.",
+	StorageSense=1,
+	Header={
+	    { "#POINTS\n % .0f\n", SPRINTF, $NElem },
+	    BUTT, {
+	    { "#ROWS\n % .0f\n", SPRINTF, $NVec },
+	    BUTT, {
+	    { "#PTSEPARATION\n %# .14g\n", SPRINTF, $SepElem },
+	    BUTT, {
+	    { "#RWSEPARATION\n %# .14g\n", SPRINTF, $SepVec },
+	    BUTT, {
+	    { "#XORIGIN\n  %# .14g\n", SPRINTF, $OriginX },
+	    BUTT, {
+	    { "#YORIGIN\n  %# .14g\n", SPRINTF, $OriginY },
+	    BUTT, {
+	    { "#ROTATION\n  %# .14g\n", SPRINTF, $Rotation },
+	    BUTT, {
+	    {"#SENSE\n  1\n",SPRINTF,0},
+	    BUTT, {
+	    {"#TRANSFORM\n    %.14g", SPRINTF, $EXMult },
+	    BUTT, {
+	    {"  %.14g\n", SPRINTF, $EXBase},
+	    BUTT, {
+	     { $L_G_ZERO,IF, {"#DUMMY\n  -1.000000E+32\n",SPRINTF,0},""},
+	    BUTT, {
+	     { $L_G_ZERO,IF, "", {"#GTYPE\n  %.0f\n",SPRINTF, $L_GTYPE} },
+	    BUTT, 
+	    {"#GRID\n",SPRINTF,0}
+	    }}}}}}}}}}}},
+
+
+	REPTSTR={{"\"",REPEAT,$L_GTYPE},CONCAT},
+	NewlineOnVector=1,
+	C="79 characters, with headroom for a repeat count, which can fool ZPerLine",
+	ZPerLine={ $L_G_ZERO, IF, 5, { {{79,MINUS,$L_GTYPE},MINUS,$L_GTYPE}, DIV, $L_GTYPE}},
+	IsXYZ=0,
+	LineEnd={"\n",SPRINTF,0},
+	HasAllLoc=1,
+	FormatZ={$L_G_ZERO, IF ,{"%15.6E",SPRINTF,$ZVALUE}, {$ZVALUE, BINARY, INTERP="GXF90", COUNT=$L_GTYPE}},
+	FormatRepeatZ={$REPTSTR,BUTT,{ {$RepeatCount,BINARY, INTERP="GXF90", COUNT=$L_GTYPE},BUTT,$FORMATZ}},
+	C="Nulls are coded with a bodynull==-1 for interp=GXF90 to deal with",
+	FormatRepeatNullZ=$FormatRepeatZ,
+        "",PARSE
+    },
+    "",PARSE
+}

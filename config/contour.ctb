@@ -1,0 +1,4 @@
+Resolve colour table Rev 1.236
+hsv
+0.0 0.66666666 1.0 1.0   # Min = Blue
+1.0 0.00000000 1.0 1.0   # Max = Red

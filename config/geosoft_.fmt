@@ -1,0 +1,118 @@
+{
+    Title="Geosoft/Gipsi binary in non-native ('other') byte order",
+    Description=
+	"Reads grids in opposite byte order to the native platform\n"
+	"This functionality is required for GETdbase and GETeul only",
+    FileExtension="grd",
+    CTypeLUT="Line for each grid type, fields are size (bytes), signed flag, parse interp, PreferedType", 
+    TypeLUT= "1,0,255,BINARY UNSIGNED,0\n"
+	     "1,1,-127,BINARY SIGNED,-1\n"
+	     "2,0,65535,BINARY UNSIGNED,-1\n"
+	     "2,1,-32767,BINARY SIGNED,1\n"
+	     "4,0,4294967295,BINARY UNSIGNED,-1\n"
+	     "4,1,-2147483647,BINARY SIGNED,2\n"
+	     "4,2,-1.0e32,IEEE FLOAT,3\n"
+	     "8,2,-1.0e32,IEEE FLOAT,4\n",
+    ENDN="REVERSE",
+    GridImport=
+    {
+	HEADREC={PARSE,FORMAT="CHAR",START=1,END=1,COUNT=512},
+	ElemSize={$HEADREC,PARSE,FORMAT="CHAR",START=1,COUNT=4,INTERP="BINARY SIGNED",ENDIAN=$ENDN},
+	ElemSign={$HEADREC,PARSE,FORMAT="CHAR",START=5,COUNT=4,INTERP="BINARY SIGNED",ENDIAN=$ENDN},
+	NElem={$HEADREC,PARSE,FORMAT="CHAR",START=9,COUNT=4,INTERP="BINARY SIGNED",ENDIAN=$ENDN},
+	NVec={$HEADREC,PARSE,FORMAT="CHAR",START=13,COUNT=4,INTERP="BINARY SIGNED",ENDIAN=$ENDN},
+	gSense={$HEADREC,PARSE,FORMAT="CHAR",START=17,COUNT=4,INTERP="BINARY SIGNED",ENDIAN=$ENDN},
+	C="Need to swap sense values of 2 and 4, sigh",
+	StorageSense={ 
+	    {$gSense,EQUALS,  2}, IF,  4, {
+	    {$gSense,EQUALS, -2}, IF, -4, {
+	    {$gSense,EQUALS,  4}, IF,  2, {
+	    {$gSense,EQUALS, -4}, IF, -2, 
+	    $gSense }}}},
+	SepElem={$HEADREC,PARSE,FORMAT="CHAR",START=21,COUNT=8,INTERP="IEEE FLOAT",ENDIAN=$ENDN},
+	SepVec={$HEADREC,PARSE,FORMAT="CHAR",START=29,COUNT=8,INTERP="IEEE FLOAT",ENDIAN=$ENDN},
+	OriginX={$HEADREC,PARSE,FORMAT="CHAR",START=37,COUNT=8,INTERP="IEEE FLOAT",ENDIAN=$ENDN},
+	OriginY={$HEADREC,PARSE,FORMAT="CHAR",START=45,COUNT=8,INTERP="IEEE FLOAT",ENDIAN=$ENDN},
+	Rotation={$HEADREC,PARSE,FORMAT="CHAR",START=53,COUNT=8,INTERP="IEEE FLOAT",ENDIAN=$ENDN},
+	EBase={$HEADREC,PARSE,FORMAT="CHAR",START=61,COUNT=8,INTERP="IEEE FLOAT",ENDIAN=$ENDN},
+	EMult={$HEADREC,PARSE,FORMAT="CHAR",START=69,COUNT=8,INTERP="IEEE FLOAT",ENDIAN=$ENDN},
+	TypeLine={$TypeLUT,PARSE,FORMAT="LINE", 
+		CONDITION={
+			    { {PARSE,FORMAT="FIELD",START=1,COUNT=1,INTERP="NUMBER" }, EQUALS , $ElemSize }, AND,
+			    { {PARSE,FORMAT="FIELD",START=2,COUNT=1,INTERP="NUMBER" }, EQUALS , $ElemSign } 
+			   } },
+	BodyNull={$TypeLine,PARSE,FORMAT="FIELD",START=3,COUNT=1,INTERP="NUMBER"},
+	ZInterp={$TypeLine,PARSE,FORMAT="FIELD",START=4},
+	PARSE, START=513, FORMAT="CHAR",COUNT=$ElemSize,STEP=$ElemSize,INTERP=$ZInterp,ENDIAN=$ENDN
+    },
+    GridExport=
+    {
+	C1="Get details of grid based on $PreferredType)",
+	TypeLine={$TypeLUT,PARSE,FORMAT="LINE", 
+		CONDITION={ {PARSE,FORMAT="FIELD",START=5,COUNT=1,INTERP="NUMBER" }, EQUALS , $PreferredType } },
+	ElemSize={$TypeLine,PARSE,FORMAT="FIELD",START=1,COUNT=1,INTERP="NUMBER"},
+	ElemSign={$TypeLine,PARSE,FORMAT="FIELD",START=2,COUNT=1,INTERP="NUMBER"},
+	BodyNull={$TypeLine,PARSE,FORMAT="FIELD",START=3,COUNT=1,INTERP="NUMBER"},
+	StorageSense=1,
+	HasAllLoc=1,
+	C2="EBase and EMult must be *calculated* from the grid limits for the allowable range"
+	   "Where is this to be done, and how should it be coded into the gengrd structure?"
+	   "Enclosing scope could supply look-ups of likely base and mult for given ranges"
+	   "Enclosing scope could supply grid ranges and let .fmt calculate required (how?)"
+	   "Enclosing scope could expose a function (?) to calculate base and mult"
+	   ".fmt could report required range and let export evaluate EBase and EMult (I think this is the one)"
+           "PS, can we always arrange to export real*4 grids for geosoft?",
+	EBase=$IBase,
+	EMult=$IMult,
+	ZInterp={$TypeLine,PARSE,FORMAT="FIELD",START=4},
+	Label48="                                                ",
+	Mapno16="                ",
+	Pad10="\0\0\0\0\0\0\0\0\0\0",
+	Pad20={$Pad10,BUTT,$Pad10},
+	Pad40={$Pad20,BUTT,$Pad20},
+	Pad80={$Pad40,BUTT,$Pad40},
+	Pad160={$Pad80,BUTT,$Pad80},
+	Pad320={$Pad160,BUTT,$Pad160},
+	Pad324={$Pad320,BUTT,"\0\0\0\0"},
+	Pad512={$Pad324,BUTT,{$Pad160,BUTT,{$Pad20,BUTT,"\0\0\0\0\0\0\0\0"}}},
+	I4Null={-2147483647,BINARY,"",INTERP="BINARY SIGNED",COUNT=4,ENDIAN=$ENDN},
+	TypeNull={$BodyNull,BINARY,"",INTERP=$ZInterp,COUNT=$ElemSize,ENDIAN=$ENDN},
+	C="Null needs to be padded to 4 bytes if less. Real*8 case is a guess. Suspect is irrelevant",
+	TypeNull4={ {$ElemSize,EQUALS,4}, IF, $TypeNull, {
+		    {$ElemSize,EQUALS,8}, IF, {$BodyNull,BINARY,"",INTERP="IEEE FLOAT",COUNT=4,ENDIAN=$ENDN}, {
+		    T2={$TypeNull,BUTT,$TypeNull},
+		    {$ElemSize,EQUALS,2}, IF, $T2, {
+		    {$ElemSize,EQUALS,1}, IF, {$T2,BUTT,$T2} }}}},
+	Header={
+	    {$ElemSize,BINARY,"",INTERP="BINARY SIGNED",COUNT=4,ENDIAN=$ENDN},	BUTT, {
+	    {$ElemSign,BINARY,"",INTERP="BINARY SIGNED",COUNT=4,ENDIAN=$ENDN},	BUTT, {
+	    {$NElem,BINARY,"",INTERP="BINARY SIGNED",COUNT=4,ENDIAN=$ENDN},	BUTT, {
+	    {$NVec,BINARY,"",INTERP="BINARY SIGNED",COUNT=4,ENDIAN=$ENDN},	BUTT, {
+	    {$StorageSense,BINARY,"",INTERP="BINARY SIGNED",COUNT=4,ENDIAN=$ENDN},	BUTT, {
+	    {$SepElem,BINARY,"",INTERP="IEEE FLOAT",COUNT=8,ENDIAN=$ENDN},	BUTT, {
+	    {$SepVec,BINARY,"",INTERP="IEEE FLOAT",COUNT=8,ENDIAN=$ENDN},	BUTT, {
+	    {$OriginX,BINARY,"",INTERP="IEEE FLOAT",COUNT=8,ENDIAN=$ENDN},	BUTT, {
+	    {$OriginY,BINARY,"",INTERP="IEEE FLOAT",COUNT=8,ENDIAN=$ENDN},	BUTT, {
+	    {$Rotation,BINARY,"",INTERP="IEEE FLOAT",COUNT=8,ENDIAN=$ENDN},	BUTT, {
+	    {$EBase,BINARY,"",INTERP="IEEE FLOAT",COUNT=8,ENDIAN=$ENDN},	BUTT, {
+	    {$EMult,BINARY,"",INTERP="IEEE FLOAT",COUNT=8,ENDIAN=$ENDN},	BUTT, {
+	    $Label48,	BUTT, {
+	    $Mapno16,	BUTT, {
+	    $I4Null,	BUTT, {
+	    $I4Null,	BUTT, {
+	    $I4Null,	BUTT, {
+	    $I4Null,	BUTT, {
+	    $I4Null,	BUTT, {
+	    $TypeNull4,	BUTT, {
+	    $TypeNull4,	BUTT, {
+	    $TypeNull4,	BUTT, {
+	    $TypeNull4,	BUTT, {
+	    {-1.0e32,BINARY,"",INTERP="IEEE FLOAT",COUNT=8,ENDIAN=$ENDN},	BUTT, {
+	    {0,BINARY,"",INTERP="BINARY SIGNED",COUNT=4,ENDIAN=$ENDN},	BUTT,
+	    $Pad324 }}}}}}}}}}}}}}}}}}}}}}}}},
+	Trailer=$Pad512,
+	FormatZ={$ZVALUE,BINARY,"",INTERP=$ZInterp,COUNT=$ElemSize,ENDIAN=$ENDN},
+	"",VALUE
+    },
+    "",PARSE
+}

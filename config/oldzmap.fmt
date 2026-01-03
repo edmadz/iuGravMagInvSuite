@@ -1,0 +1,99 @@
+{
+    Title="Old ZMAP ascii neutral grid format",
+    Description=
+	"Pre ZMAP-Plus ZMAP ascii neutral",
+    FileExtension="zycor",
+    GridImport=
+    {
+	PREAMBLE=
+	{
+	    PARSE,FORMAT="LINE",START=1,COUNT=1,END=50,
+	    CONDITION=
+	    {
+		PARSE,FORMAT="CHAR",START=1,COUNT=8,
+		CONDITION={EQUALS,"-9999999"}
+	    }
+	},
+	HEADER_NC=
+	{
+	  {
+	      PARSE,FORMAT="LINE",START=2,COUNT=1,END=10,
+	      BASE=$PREAMBLE,
+	      CONDITION=
+	      {
+		PARSE,FORMAT="CHAR",START=1,END=1,CONDITION={{EQUALS,"!"},NOT}
+	      }
+	  },
+	  CONCAT, FLDSEP="\n"
+	},
+	CMT1="Header line numbers count from first after -99999999", 
+	HEADER_L1={$HEADER_NC,PARSE,FORMAT="LINE",START=1,END=1,COUNT=1},
+	HEADER_L2={$HEADER_NC,PARSE,FORMAT="LINE",START=2,END=2,COUNT=1},
+	HEADER_L3={$HEADER_NC,PARSE,FORMAT="LINE",START=3,END=3,COUNT=1},
+	BodyNull={$HEADER_L3,PARSE,FORMAT="FIELD",FLDSEP=" \t",NOEMPTY=1,
+		   START=3,END=3,COUNT=1,INTERP="NUMBER"},
+	CellsY={$HEADER_L1,PARSE,FORMAT="FIELD",FLDSEP=" \t",NOEMPTY=1,
+		   START=1,END=1,COUNT=1,INTERP="NUMBER"},
+	CellsX={$HEADER_L1,PARSE,FORMAT="FIELD",FLDSEP=" \t",NOEMPTY=1,
+		   START=2,END=2,COUNT=1,INTERP="NUMBER"},
+	OriginX={$HEADER_L2,PARSE,FORMAT="FIELD",FLDSEP=" \t",NOEMPTY=1,
+		   START=1,END=1,COUNT=1,INTERP="NUMBER"},
+	OriginY={$HEADER_L2,PARSE,FORMAT="FIELD",FLDSEP=" \t",NOEMPTY=1,
+		   START=3,END=3,COUNT=1,INTERP="NUMBER"},
+	MaxX={$HEADER_L2,PARSE,FORMAT="FIELD",FLDSEP=" \t",NOEMPTY=1,
+		   START=2,END=2,COUNT=1,INTERP="NUMBER"},
+	MaxY={$HEADER_L2,PARSE,FORMAT="FIELD",FLDSEP=" \t",NOEMPTY=1,
+		   START=4,END=4,COUNT=1,INTERP="NUMBER"},
+	StorageSense=4,
+
+	{ PARSE,FORMAT="LINE",START=5,BASE=$PREAMBLE
+	},
+	PARSE,FORMAT="FIELD",START=1,FLDSEP=" \t",STRIPWS=1,INTERP="NUMBER"
+    },
+    GridExport=
+    {
+	BodyNull=1e+30,
+	NullZ="  0.100000002E+31",
+	Header={
+	    "    1     GRID DATASET            \n"
+	    "  1 JAN 00 00:00    0   0   0   0\n"
+	    "-999999999\n",
+	    BUTT, {
+	    { "  %10.0f",SPRINTF,$CellsY},
+	    BUTT, {
+	    { "%10.0f        0.000          0.00000         0.000000    \n",
+				SPRINTF,$CellsX},
+	    BUTT, {
+	    { "%#15.9g ",SPRINTF,$OriginX},
+	    BUTT, {
+	    { "%#16.9g ",SPRINTF,$MaxX},
+	    BUTT, {
+	    { "%#16.9g ",SPRINTF,$OriginY},
+	    BUTT, {
+	    { "%#16.9g    \n",SPRINTF,$MaxY},
+	    BUTT, {
+	    { "%#15.9g",SPRINTF,$IncrX},
+	    BUTT, {
+	    { "%#17.9g    ",SPRINTF,$IncrY},
+	    BUTT, {
+	    $NullZ,
+	    BUTT,
+	    "\n"
+	                            }}}}}}}}}
+	},
+	StorageSense=4,
+	NewlineOnVector=1,
+	ZPerLine=4,
+	VectorOnNull=1,
+	IsXYZ=0,
+	LineEnd="\n",
+	HasAllLoc=1,
+	FormatZ={"  % -#15.9g",SPRINTF,$ZVALUE},
+
+        {$Rotation,EQUALS,0.0},
+        IF,
+        "",
+        "Grid rotation must be zero for zycor neutral output"
+    },
+    "",PARSE
+}

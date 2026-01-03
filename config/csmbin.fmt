@@ -1,0 +1,43 @@
+{
+    Title="Colorado School of Mines Binary",
+    Description=
+	"Import only working at present.",
+    FileExtension="csm",
+    GridImport=
+    {
+	StorageSense=+1,
+	C1="Use following hack s.t. bodynull is same as nulls read from grid",
+	BodyNull={"\161\111\362\312",
+		  PARSE,FORMAT="CHAR",COUNT=4,INTERP="IEEE FLOAT"},
+	HEADREC={PARSE,FORMAT="CHAR",START=1,END=1,COUNT=96},
+	IDENT={$HEADREC,PARSE,FORMAT="CHAR",COUNT=56},
+	PROGNAME={$HEADREC,PARSE,FORMAT="CHAR",START=57,COUNT=8},
+	CellsX={$HEADREC,PARSE,FORMAT="CHAR",START=65,count=4,
+		    INTERP="BINARY SIGNED"},
+	CellsY={$HEADREC,PARSE,BASE=$CellsX,FORMAT="CHAR",START=5,count=4,
+		    INTERP="BINARY SIGNED"},
+	NumZ={$HEADREC,PARSE,BASE=$CellsY,FORMAT="CHAR",START=5,count=4,
+		    INTERP="BINARY SIGNED"},
+	OriginX={$HEADREC,PARSE,BASE=$NumZ,FORMAT="CHAR",START=5,count=4,
+		    INTERP="IEEE FLOAT"},
+	IncrX={$HEADREC,PARSE,BASE=$OriginX,FORMAT="CHAR",START=5,count=4,
+		    INTERP="IEEE FLOAT"},
+	OriginY={$HEADREC,PARSE,BASE=$IncrX,FORMAT="CHAR",START=5,count=4,
+		    INTERP="IEEE FLOAT"},
+	IncrY={$HEADREC,PARSE,BASE=$OriginY,FORMAT="CHAR",START=5,count=4,
+		    INTERP="IEEE FLOAT"},
+	Rotation={$HEADREC,PARSE,BASE=$IncrY,FORMAT="CHAR",START=5,count=4,
+		    INTERP="IEEE FLOAT"},
+	VECLEN={$CellsX,MULT,4},
+	ROWLEN={{$VECLEN, MULT, $NumZ}, PLUS, 4},
+	BLOCKLENGTH={ {$ROWLEN, GE, 96}, IF, $ROWLEN, 96 },
+	BLOCKS={PARSE,FORMAT="CHAR",COUNT=$VECLEN,
+	    STEP=$BLOCKLENGTH,START={$BLOCKLENGTH,PLUS,5}},
+	$BLOCKS, PARSE, FORMAT="CHAR",COUNT=4,STEP=4,INTERP="IEEE FLOAT"
+    },
+    GridExport=
+    {
+	"CSM binary grid output not yet implemented.",VALUE
+    },
+    "",PARSE
+}

@@ -1,0 +1,269 @@
+{
+    Title="Generic formatted ascii grid format",
+    Description=
+	"File contains fixed format Z values.\n"
+	"On import the user must specify enough information to \n"
+	"locate and size the grid, For example OriginX, OriginY, CellsX,\n"
+	"CellsY, IncrX and IncrY",
+    FileExtension="grd",
+C="Documentation data used by mutliple formats",
+SufficientLocList=
+		"OriginXVar,OriginYVar,IncrXVar,IncrYVar,SepElemVar,SepVecVar,SizeXVar,SizeYVar,"
+		"MaxXVar,MaxYVar,RotationVar,CellsXVar,CellsYVar,NElemVar,NVecVar",
+OriginXVar = {
+	Name="OriginX",
+	Description="X location in grid ground units of the grid origin\n"
+		    "(cell at bottom left of grid)",
+	Type="Number",
+	Required=0,
+	_INVALID,VALUE},
+OriginYVar = {
+	Name="OriginY",
+	Description="Y location in grid ground units of the grid origin\n"
+		    "(cell at bottom left of grid)",
+	Type="Number",
+	Required=0,
+	_INVALID,VALUE},
+IncrXVar = {
+	Name="IncrX",
+	Description="Distance in grid ground units between cells in X direction",
+	Type="Number",
+	Required=0,
+	_INVALID,VALUE},
+IncrYVar = {
+	Name="IncrY",
+	Description="Distance in grid ground units between cells in Y direction",
+	Type="Number",
+	Required=0,
+	_INVALID,VALUE},
+SepElemVar = {
+	Name="SepElem",
+	Description=
+		"Distance in grid ground units between consecutive cells\n"
+		"as stored in the grid",
+	Type="Number",
+	Required=0,
+	_INVALID,VALUE},
+SepVecVar = {
+	Name="SepVec",
+	Description=
+		"Distance in grid ground units between adjacent vectors\n"
+		"as stored in the grid",
+	Type="Number",
+	Required=0,
+	_INVALID,VALUE},
+SizeXVar = {
+	Name="SizeX",
+	Description="Total X size of the the grid in grid ground units",
+	Type="Number",
+	Required=0,
+	_INVALID,VALUE},
+SizeYVar = {
+	Name="SizeY",
+	Description="Total Y size of the the grid in grid ground units",
+	Type="Number",
+	Required=0,
+	_INVALID,VALUE},
+MaxXVar = {
+	Name="MaxX",
+	Description="Maximum X location.\n"
+		"This valid if grid rotation is zero only",
+	Type="Number",
+	Required=0,
+	_INVALID,VALUE},
+MaxYVar = {
+	Name="MaxY",
+	Description="Maximum Y location.\n"
+		"This valid if grid rotation is zero only",
+	Type="Number",
+	Required=0,
+	_INVALID,VALUE},
+RotationVar = {
+	Name="Rotation",
+	Description="Rotation of the grid counter-clockwise in degrees",
+	Type="Number",
+	Required=0,
+	0.0,VALUE},
+CellsXVar = {
+	Name="CellsX",
+	Description="The number of grid values in the X direction",
+	Type="Integer",
+	MinValue=1,
+	Required=0,
+	_INVALID,VALUE},
+CellsYVar = {
+	Name="CellsY",
+	Description="The number of grid values in the Y direction",
+	Type="Integer",
+	MinValue=1,
+	Required=0,
+	_INVALID,VALUE},
+NElemVar = {
+	Name="NElem",
+	Description="The number of grid values in each storage vector",
+	Type="Integer",
+	MinValue=1,
+	Required=0,
+	_INVALID,VALUE},
+NVecVar = {
+	Name="NVec",
+	Description="The number of storage vectors",
+	Type="Integer",
+	MinValue=1,
+	Required=0,
+	_INVALID,VALUE},
+StorageSenseVar = {
+	Vals=
+		"+1,By rows from bottom left\n"
+		"-1,By columns from bottom left\n"
+		"+2,By columns from bottom right\n"
+		"-2,By rows from bottom right\n"
+		"+3,By rows from top right\n"
+		"-3,By columns from top right\n"
+		"+4,By columns from top left\n"
+		"-4,By rows from top left\n",
+	Name="StorageSense",
+	Description="Orientation and sequencing of the component vectors",
+	Type="Integer",
+	Required=0,
+	EnumVals={{$Vals,PARSE,FORMAT="LINE"},PARSE,FORMAT="FIELD",start=1,end=1,INTERP="STRING"},
+	EnumName={{$Vals,PARSE,FORMAT="LINE"},PARSE,FORMAT="FIELD",start=2,end=2,INTERP="STRING"},
+	"+1",VALUE},
+DataAtCentreVar = {
+	Vals=	"0,Data value at grid origin and successive cell size steps\n"
+		"1,Data value at centre of each grid cell",
+	Name="DataAtCentre",
+	Description="Data location in grid cell",
+	Type="Integer",
+	Required=0,
+	EnumVals={{$Vals,PARSE,FORMAT="LINE"},PARSE,FORMAT="FIELD",start=1,end=1,INTERP="STRING"},
+	EnumName={{$Vals,PARSE,FORMAT="LINE"},PARSE,FORMAT="FIELD",start=2,end=2,INTERP="STRING"},
+	"0",VALUE},
+
+EBaseList = "EBaseVar,EMultVar",
+EBaseVar = {
+	Name="EBase",
+	Description=
+		"Where the grid is stored externally as scaled integers\n"
+		"Use conversion <actual> = (<grid> / EMULT) + EBASE",
+	Type="Number",
+	Required=0,
+	0.0,VALUE},
+EMultVar = {
+	Name="EMult",
+	Description=
+		"Where the grid is stored externally as scaled integers\n"
+		"Use conversion <actual> = (<grid> / EMULT) + EBASE",
+	Type="Number",
+	Required=0,
+	1.0,VALUE},
+IsXYZVar = {
+	Vals="0,False\n1,True",
+	Name="IsXYZ",
+	Description="The grid contains an X and Y location for eachpoint\n"
+		"This will only manage data which does actually fall onto a grid",
+	Type="Number",
+	Required=0,
+	EnumVals={{$Vals,PARSE,FORMAT="LINE"},PARSE,FORMAT="FIELD",start=1,end=1,INTERP="STRING"},
+	EnumName={{$Vals,PARSE,FORMAT="LINE"},PARSE,FORMAT="FIELD",start=2,end=2,INTERP="STRING"},
+	"0",VALUE},
+HasAllLocExportVar = {
+	Vals="0,False\n1,True",
+	Name="HasAllLoc",
+	Description=
+		"An XYZ file has all grid cells present (some may have a null value)",
+	Type="Integer",
+	Required=0,
+	EnumVals={{$Vals,PARSE,FORMAT="LINE"},PARSE,FORMAT="FIELD",start=1,end=1,INTERP="STRING"},
+	EnumName={{$Vals,PARSE,FORMAT="LINE"},PARSE,FORMAT="FIELD",start=2,end=2,INTERP="STRING"},
+	"0",VALUE},
+HasAllLocImportVar = {
+	Vals="0,False\n1,True",
+	Name="HasAllLoc",
+	Description=
+		"An XYZ file has all grid cells present (some may have a null value)"
+		"Import will still work if this is set True in error",
+	Type="Integer",
+	Required=0,
+	EnumVals={{$Vals,PARSE,FORMAT="LINE"},PARSE,FORMAT="FIELD",start=1,end=1,INTERP="STRING"},
+	EnumName={{$Vals,PARSE,FORMAT="LINE"},PARSE,FORMAT="FIELD",start=2,end=2,INTERP="STRING"},
+	"0",VALUE},
+BodyNullVar = {
+	Name="BodyNull",
+	Description=
+		"Value in stored grid which is a null value",
+	Type="Number",
+	Required=0,
+	_INVALID,VALUE},
+ZPerLineSimpleVar = {
+	Name="ZPerLine",
+	Description=
+		"The number of Z values per line",
+	Type="Integer",
+	MinValue=1,
+	Required=0,
+	"1",VALUE},
+NewlineOnVectorVar = {
+	Vals="0,False\n1,True",
+	Name="NewlineOnVector",
+	Description=
+		"Whether, if fewer that ZPerLine values have been output in the current"
+		"line, the next vector should be output on a new line",
+	Type="Integer",
+	Required=0,
+	EnumVals={{$Vals,PARSE,FORMAT="LINE"},PARSE,FORMAT="FIELD",start=1,end=1,INTERP="STRING"},
+	EnumName={{$Vals,PARSE,FORMAT="LINE"},PARSE,FORMAT="FIELD",start=2,end=2,INTERP="STRING"},
+	"0",VALUE},
+    LocZFieldStart={?ZFieldStart,IFVALID,?ZFieldStart,1},
+    LocZFieldWidth={?ZFieldWidth,IFVALID,?ZFieldWidth,1},
+    LocLineStart={?LineStart,IFVALID,?LineStart,1},
+    GridImport=
+    {
+	VariableList={
+		{ "ZFieldStartVar,ZFieldWidthVar,LineStartVar,StorageSenseVar,",
+		  BUTT, $SufficientLocList},
+		PARSE,FORMAT="FIELD"},
+	ZFieldStartVar={
+		Name="ZFieldStart",
+		Description="Character position (from 1) of start of first number on a line",
+		Type="Integer",
+		MinValue=1,
+		Required=1,
+		1, VALUE },
+	ZFieldWidthVar={
+		Name="ZFieldWidth",
+		Description="Field width of a number, e.g. for FORTRAN F6.2 would be 6",	
+		Type="Integer",
+		MinValue=1,
+		Required=1,
+		6, VALUE },
+	LineStartVar={
+		Name="LineStart",
+		Description="Line at which to start (first line is number 1)",
+		Type="Integer",
+		MinValue=1,
+		Required=0,
+		1, VALUE },
+	{PARSE,FORMAT="LINE",START=$LocLineStart},
+	PARSE,FORMAT="CHAR",START=$LocZFieldStart,COUNT=$LocZFieldWidth,
+	STEP=$LocZFieldWidth,INTERP="NUMBER"
+    },
+    GridExport=
+    {
+	VariableList={
+		"ZFieldStartVar,ZFieldWidthVar,StorageSenseVar,BodyNullVar,ZPerLineSimpleVar,"
+		"NewlineOnVectorVar",
+		PARSE,FORMAT="FIELD"},
+	LineEnd={"\n",SPRINTF,0},
+	FormatZ={
+	    {"%%%.0fg",SPRINTF,$LocZFieldWidth},
+	    SPRINTF,$ZVALUE
+	},
+	LineStart=
+	{"                                             ",
+	    PARSE,FORMAT="CHAR",START=1,COUNT=$LocZFieldStart,END=0
+	},
+	"",VALUE
+    },
+    "",PARSE
+}

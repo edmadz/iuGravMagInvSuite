@@ -1,0 +1,115 @@
+{
+    Title="Zycor ascii neutral grid format",
+    Description=
+	"Zycor neutral (ZMAP Plus) ascii grid files",
+    FileExtension="zycor",
+    GridImport=
+    {
+	HEADER_BLL=
+	{
+	  PARSE,FORMAT="LINE",END=100,
+	  CONDITION=
+	  {
+	      {
+		{
+		    PARSE,FORMAT="CHAR",START=2,COUNT=0
+		}, PARSE,FORMAT="FIELD",FLDSEP=",",STRIPWS=1, START=2, END=2,
+		CONDITION={EQUALS,"GRID",CASESENS=0}
+	      },
+	      AND,
+	      {PARSE,FORMAT="CHAR",START=1,END=1,COUNT=1,CONDITION={EQUALS,"@"}}
+	  }
+	},
+	HEADER_BL={$HEADER_BLL,PARSE,FORMAT="CHAR",START=2,COUNT=0},
+	HEADER_EL=
+	{
+	  PARSE,BASE=$HEADER_BL,START=2,FORMAT="LINE",END=100,
+	  CONDITION=
+	  {
+		PARSE,FORMAT="CHAR",START=1,END=1,COUNT=1,CONDITION={EQUALS,"@"}
+	  }
+	},
+	HEADER_NC=
+	{
+	  {
+	      PARSE,BASE=$HEADER_BL,FORMAT="LINE",START=1,COUNT=1,LIMIT=$HEADER_EL,
+	      CONDITION=
+	      {
+		PARSE,FORMAT="CHAR",START=1,END=1,CONDITION={{EQUALS,"!"},NOT}
+	      }
+	  },
+	  CONCAT, FLDSEP="\n"
+	},
+	HEADER_L2={$HEADER_NC,PARSE,FORMAT="LINE",START=2,END=2,COUNT=1},
+	FieldWidth={$HEADER_L2,PARSE,FORMAT="FIELD",FLDSEP=",",STRIPWS=1,
+		   START=1,END=1,COUNT=1,INTERP="NUMBER"},
+	BodyNull={$HEADER_L2,PARSE,FORMAT="FIELD",FLDSEP=",",STRIPWS=1,
+		   START=2,END=2,COUNT=1,INTERP="NUMBER"},
+	FieldOffs={$HEADER_L2,PARSE,FORMAT="FIELD",FLDSEP=",",STRIPWS=1,
+		   START=5,END=5,COUNT=1,INTERP="NUMBER"},
+	HEADER_L3={$HEADER_NC,PARSE,FORMAT="LINE",START=3,END=3,COUNT=1},
+	CellsY={$HEADER_L3,PARSE,FORMAT="FIELD",FLDSEP=",",STRIPWS=1,
+		   START=1,END=1,COUNT=1,INTERP="NUMBER"},
+	CellsX={$HEADER_L3,PARSE,FORMAT="FIELD",FLDSEP=",",STRIPWS=1,
+		   START=2,END=2,COUNT=1,INTERP="NUMBER"},
+	OriginX={$HEADER_L3,PARSE,FORMAT="FIELD",FLDSEP=",",STRIPWS=1,
+		   START=3,END=3,COUNT=1,INTERP="NUMBER"},
+	OriginY={$HEADER_L3,PARSE,FORMAT="FIELD",FLDSEP=",",STRIPWS=1,
+		   START=5,END=5,COUNT=1,INTERP="NUMBER"},
+	MaxX={$HEADER_L3,PARSE,FORMAT="FIELD",FLDSEP=",",STRIPWS=1,
+		   START=4,END=4,COUNT=1,INTERP="NUMBER"},
+	MaxY={$HEADER_L3,PARSE,FORMAT="FIELD",FLDSEP=",",STRIPWS=1,
+		   START=6,END=6,COUNT=1,INTERP="NUMBER"},
+	StorageSense=4,
+
+	{ PARSE,FORMAT="LINE",BASE=$HEADER_EL,START=2,
+	  CONDITION={ SC={PARSE,FORMAT="CHAR",START=1,END=1,STEP=0},
+	      {{$SC,EQUALS,"!"},OR,{$SC,EQUALS,"+"}}, NOT }
+	},
+	PARSE,FORMAT="CHAR",START=$FieldOffs,COUNT=$FieldWidth,
+	STEP=$FieldWidth,INTERP="NUMBER"
+    },
+    GridExport=
+    {
+	LocLineTerm={"\n",SPRINTF,0},
+	BodyNull=1e+30,
+	Header={
+	    { "!\n! Zycor ascii neutral file created by GETgrid,\n"
+	     "! Part of the GETdbase2.0 application suite.\n"
+	     "!\n"
+	     "@GRID, GRID, 5\n"
+	     "15, ", SPRINTF, 0 },
+	    BUTT, {
+	    { "%.10g, , 7, 1\n",SPRINTF,$BODYNULL},
+	    BUTT, {
+	    { "%.0f, ",SPRINTF,$CellsY},
+	    BUTT, {
+	    { "%.0f, ",SPRINTF,$CellsX},
+	    BUTT, {
+	    { "%.10g, ",SPRINTF,$OriginX},
+	    BUTT, {
+	    { "%.10g, ",SPRINTF,$MaxX},
+	    BUTT, {
+	    { "%.10g, ",SPRINTF,$OriginY},
+	    BUTT, {
+	    { "%.10g\n",SPRINTF,$MaxY},
+	    BUTT,
+	    {" 0., 0., 0. \n@\n",SPRINTF,0}
+	    }}}}}}}
+	},
+	StorageSense=4,
+	NewlineOnVector=1,
+	ZPerLine=5,
+	VectorOnNull=1,
+	IsXYZ=0,
+	LineEnd=$LocLineTerm,
+	HasAllLoc=1,
+	FormatZ={"%15.4E",SPRINTF,$ZVALUE},
+
+	{$Rotation,EQUALS,0.0},
+	IF,
+	"",
+	"Grid rotation must be zero for zycor neutral output"
+    },
+    "",PARSE
+}

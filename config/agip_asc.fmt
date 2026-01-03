@@ -1,0 +1,58 @@
+{
+    Title="AGIP ascii formatted grid",
+    Description=
+	"Ascii data file format used by AGIP\n"
+	"Only import supported",
+    FileExtension="asc",
+    GridImport=
+    {
+	NumHdrs={
+		MK={PARSE,FORMAT="FIELD",FLDSEP=" \t\n\r",COUNT=1,CONDITION={EQUALS,"HEADERS:"}},
+		PARSE,FORMAT="FIELD",FLDSEP=" \t\n\r",COUNT=1,BASE=$MK,START=2,INTERP="NUMBER"
+	},
+	Header={PARSE,FORMAT="LINE",COUNT=$NumHdrs},
+	originX={
+		MK={$Header,PARSE,FORMAT="FIELD",FLDSEP=" \t\n\r",COUNT=1,CONDITION={EQUALS,"XMIN="}},
+		PARSE,FORMAT="FIELD",FLDSEP=" \t\n\r",COUNT=1,BASE=$MK,START=2,INTERP="NUMBER"
+	},
+	originY={
+		MK={$Header,PARSE,FORMAT="FIELD",FLDSEP=" \t\n\r",COUNT=1,CONDITION={EQUALS,"YMIN="}},
+		PARSE,FORMAT="FIELD",FLDSEP=" \t\n\r",COUNT=1,BASE=$MK,START=2,INTERP="NUMBER"
+	},
+	MaxX={
+		MK={$Header,PARSE,FORMAT="FIELD",FLDSEP=" \t\n\r",COUNT=1,CONDITION={EQUALS,"XMAX="}},
+		PARSE,FORMAT="FIELD",FLDSEP=" \t\n\r",COUNT=1,BASE=$MK,START=2,INTERP="NUMBER"
+	},
+	MaxY={
+		MK={$Header,PARSE,FORMAT="FIELD",FLDSEP=" \t\n\r",COUNT=1,CONDITION={EQUALS,"YMAX="}},
+		PARSE,FORMAT="FIELD",FLDSEP=" \t\n\r",COUNT=1,BASE=$MK,START=2,INTERP="NUMBER"
+	},
+	CellsX={
+		MK={$Header,PARSE,FORMAT="FIELD",FLDSEP=" \t\n\r",COUNT=1,CONDITION={EQUALS,"NCOL="}},
+		PARSE,FORMAT="FIELD",FLDSEP=" \t\n\r",COUNT=1,BASE=$MK,START=2,INTERP="NUMBER"
+	},
+	CellsY={
+		MK={$Header,PARSE,FORMAT="FIELD",FLDSEP=" \t\n\r",COUNT=1,
+			CONDITION={{EQUALS,"NROW="},OR,{EQUALS,"NRIG="}}},
+		PARSE,FORMAT="FIELD",FLDSEP=" \t\n\r",COUNT=1,BASE=$MK,START=2,INTERP="NUMBER"
+	},
+	Rotation={
+		MK={$Header,PARSE,FORMAT="FIELD",FLDSEP=" \t\n\r",COUNT=1,CONDITION={EQUALS,"ROTA="}},
+		PARSE,FORMAT="FIELD",FLDSEP=" \t\n\r",COUNT=1,BASE=$MK,START=2,INTERP="NUMBER"
+	},
+	BodyNull={
+		MK={$Header,PARSE,FORMAT="FIELD",FLDSEP=" \t\n\r",COUNT=1,CONDITION={EQUALS,"ZNIL="}},
+		PARSE,FORMAT="FIELD",FLDSEP=" \t\n\r",COUNT=1,BASE=$MK,START=2,INTERP="NUMBER"
+	},
+	StorageSense=1,
+	GridLines={PARSE,FORMAT="LINE",START={$NumHdrs,PLUS,2},
+		CONDITION={{{CONTAINS,"ROW"},NOT}, AND, {{CONTAINS,"RIGA"},NOT}} },
+	ZTuple={$GridLines,PARSE,FORMAT="FIELD",FLDSEP=" \t",COUNT=2,STEP=2,NOEMPTY=1},
+	$ZTuple,PARSE,FORMAT="FIELD",FLDSEP=" \t",START=2,NOEMPTY=1,INTERP="NUMBER"
+    },
+    GridExport=
+    {
+        "Output not supported for this format",VALUE
+    },
+    "",PARSE
+}

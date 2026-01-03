@@ -1,0 +1,20 @@
+#
+# GETECH Resolve projection methods: Fri Jul 07 10:11:15 2006
+#
+LMSUV      Polyconic
+neAKsXY    Hotine Oblique Mercator
+neAKsxy    Oblique Mercator
+neAsXY     Laborde Oblique Mercator
+NESXY      Lambert Conic Conformal (1SP)
+NESXY      Mercator (1SP)
+NESXY      Oblique Stereographic
+NESXY      Polar Stereographic
+NESXY      Transverse Mercator
+NESXY      Transverse Mercator (South Orientated)
+NEXY       Cassini-Soldner
+NEXY       New Zealand Map Grid
+nexy       Swiss Oblique Cylindrical
+PEXY       Mercator (2SP)
+PQLMUV     Equidistant Conic
+PQLMUV     Lambert Conic Conformal (2SP Belgium)
+PQLMUV     Lambert Conic Conformal (2SP)
